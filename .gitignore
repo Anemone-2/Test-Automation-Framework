@@ -1,0 +1,19 @@
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.jenkins-venv/
+*.egg-info/
+
+# IDE settings
+.idea/
+
+# Runtime logs and generated reports
+*.log
+logs/
+report/
+metrics/.builder/
+
+# Runtime values extracted from API responses (tokens, IDs, cookies)
+extract.yaml

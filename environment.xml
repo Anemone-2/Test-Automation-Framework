@@ -1,0 +1,34 @@
+<environment>
+    <parameter>
+        <key>TestType</key>
+        <value>API Automation</value>
+    </parameter>
+    <parameter>
+        <key>system</key>
+        <value>Windows</value>
+    </parameter>
+    <parameter>
+        <key>python version</key>
+        <value>3.13</value>
+    </parameter>
+    <parameter>
+        <key>allure version</key>
+        <value>2.44.1</value>
+    </parameter>
+    <parameter>
+        <key>BaseUrl</key>
+        <value>http://127.0.0.1:8787</value>
+    </parameter>
+    <parameter>
+        <key>environment</key>
+        <value>Local Mock</value>
+    </parameter>
+    <parameter>
+        <key>Project</key>
+        <value>Test Automation Framework</value>
+    </parameter>
+    <parameter>
+        <key>DataStores</key>
+        <value>MySQL, Redis, MongoDB, ClickHouse</value>
+    </parameter>
+</environment>

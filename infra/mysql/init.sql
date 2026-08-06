@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS api_users (
+    id VARCHAR(32) PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    role_id VARCHAR(32) NOT NULL,
+    phone VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_api_users_username (username)
+);
+
+CREATE TABLE IF NOT EXISTS api_orders (
+    order_number VARCHAR(32) PRIMARY KEY,
+    user_id VARCHAR(32) NOT NULL,
+    goods_id VARCHAR(32) NOT NULL,
+    quantity INT NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
