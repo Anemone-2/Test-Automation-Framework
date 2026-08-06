@@ -1,4 +1,5 @@
 import json
+import time
 from urllib.parse import urljoin
 
 import allure
@@ -46,12 +47,30 @@ class SnipeItClient:
             attachment_type=allure.attachment_type.JSON,
         )
 
-        response = self.session.request(
-            method=method,
-            url=url,
-            timeout=timeout,
-            **kwargs,
-        )
+        response = None
+        for attempt in range(3):
+            response = self.session.request(
+                method=method,
+                url=url,
+                timeout=timeout,
+                **kwargs,
+            )
+            if response.status_code != 429 or attempt == 2:
+                break
+
+            try:
+                retry_after = response.json().get('retryAfter')
+            except ValueError:
+                retry_after = None
+            retry_after = retry_after or response.headers.get('Retry-After', 1)
+            wait_seconds = max(1, min(float(retry_after), 60))
+            allure.attach(
+                f'HTTP 429 received; retrying after {wait_seconds:g} seconds.',
+                name=f'Rate-limit retry {attempt + 1}',
+                attachment_type=allure.attachment_type.TEXT,
+            )
+            time.sleep(wait_seconds)
+
         try:
             response_body = redact_sensitive(response.json())
             rendered_body = json.dumps(response_body, ensure_ascii=False, indent=2)
