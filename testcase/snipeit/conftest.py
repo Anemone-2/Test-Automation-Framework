@@ -64,7 +64,7 @@ class SnipeItResourceFactory:
                 ensure_ascii=False,
                 indent=2,
             ),
-            name='Test data cleanup',
+            name='测试数据清理结果',
             attachment_type=allure.attachment_type.JSON,
         )
         assert not errors, f'Failed to clean Snipe-IT test data: {errors}'

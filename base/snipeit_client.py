@@ -43,7 +43,7 @@ class SnipeItClient:
         }
         allure.attach(
             json.dumps(report_request, ensure_ascii=False, indent=2),
-            name='API request',
+            name='接口请求',
             attachment_type=allure.attachment_type.JSON,
         )
 
@@ -66,7 +66,7 @@ class SnipeItClient:
             wait_seconds = max(1, min(float(retry_after), 60))
             allure.attach(
                 f'HTTP 429 received; retrying after {wait_seconds:g} seconds.',
-                name=f'Rate-limit retry {attempt + 1}',
+                name=f'接口限流重试（第 {attempt + 1} 次）',
                 attachment_type=allure.attachment_type.TEXT,
             )
             time.sleep(wait_seconds)
@@ -81,7 +81,7 @@ class SnipeItClient:
 
         allure.attach(
             rendered_body,
-            name=f'API response ({response.status_code})',
+            name=f'接口响应（HTTP {response.status_code}）',
             attachment_type=attachment_type,
         )
         return response

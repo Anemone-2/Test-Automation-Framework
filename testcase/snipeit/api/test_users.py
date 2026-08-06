@@ -13,11 +13,11 @@ def track_unexpected_success(factory, body):
         factory.track('users', body['payload']['id'])
 
 
-@allure.feature('Snipe-IT user management')
+@allure.feature('用户管理')
 class TestUserManagement:
 
     @pytest.mark.smoke
-    @allure.title('USER-001 Create an activated asset recipient')
+    @allure.title('USER-001 创建可领用资产的已启用用户')
     def test_create_user(self, snipeit_client, snipeit_resource_factory, unique_name):
         expected = build_user_payload(unique_name)
 
@@ -40,9 +40,9 @@ class TestUserManagement:
             (('username',), 'username'),
             (('password', 'password_confirmation'), 'password'),
         ],
-        ids=['missing-first-name', 'missing-username', 'missing-password'],
+        ids=['缺少姓名', '缺少用户名', '缺少密码'],
     )
-    @allure.title('USER-002 Reject a user with missing required fields')
+    @allure.title('USER-002 缺少必填字段时拒绝创建用户')
     def test_create_user_missing_required_field(
             self,
             missing_fields,
@@ -64,7 +64,7 @@ class TestUserManagement:
         assert expected_error in body['messages'], body
 
     @pytest.mark.regression
-    @allure.title('USER-003 Reject a duplicate username')
+    @allure.title('USER-003 重复用户名时拒绝创建用户')
     def test_duplicate_username_is_rejected(
             self,
             snipeit_client,
@@ -98,7 +98,7 @@ class TestUserManagement:
         assert len(exact_matches) == 1
 
     @pytest.mark.smoke
-    @allure.title('USER-004 Find a user by exact username')
+    @allure.title('USER-004 按用户名精确查询用户')
     def test_search_user_by_username(
             self,
             snipeit_client,
@@ -122,7 +122,7 @@ class TestUserManagement:
         assert exact_matches[0]['id'] == user['id']
 
     @pytest.mark.regression
-    @allure.title('USER-005 Update a user name and job title')
+    @allure.title('USER-005 修改用户姓名和职位')
     def test_update_user(
             self,
             snipeit_client,
@@ -149,7 +149,7 @@ class TestUserManagement:
         assert actual['jobtitle'] == changes['jobtitle']
 
     @pytest.mark.regression
-    @allure.title('USER-006 Querying an unknown user returns a business error')
+    @allure.title('USER-006 查询不存在的用户时返回业务错误')
     def test_unknown_user_returns_business_error(self, snipeit_client):
         response = snipeit_client.get('users/999999999')
 
@@ -160,7 +160,7 @@ class TestUserManagement:
         assert 'does not exist' in body['messages']
 
     @pytest.mark.regression
-    @allure.title('USER-007 Delete an unassigned user')
+    @allure.title('USER-007 删除未领用资产的用户')
     def test_delete_user(
             self,
             snipeit_client,

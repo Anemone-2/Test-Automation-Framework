@@ -75,12 +75,12 @@ def browser_driver(request, snipeit_settings):
     if report and report.failed:
         allure.attach(
             driver.get_screenshot_as_png(),
-            name='Web failure screenshot',
+            name='Web 用例失败截图',
             attachment_type=allure.attachment_type.PNG,
         )
         allure.attach(
             driver.page_source,
-            name='Web failure page source',
+            name='Web 用例失败页面源码',
             attachment_type=allure.attachment_type.HTML,
         )
     driver.quit()

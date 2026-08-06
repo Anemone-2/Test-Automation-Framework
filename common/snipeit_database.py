@@ -17,7 +17,7 @@ class SnipeItDatabase:
                 ensure_ascii=False,
                 indent=2,
             ),
-            name='MySQL query',
+            name='MySQL 查询语句',
             attachment_type=allure.attachment_type.JSON,
         )
         connection = pymysql.connect(
@@ -39,7 +39,7 @@ class SnipeItDatabase:
 
         allure.attach(
             json.dumps(rows, ensure_ascii=False, indent=2, default=str),
-            name='MySQL result',
+            name='MySQL 查询结果',
             attachment_type=allure.attachment_type.JSON,
         )
         return rows

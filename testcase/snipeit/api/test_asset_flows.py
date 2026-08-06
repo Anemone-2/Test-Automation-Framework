@@ -85,11 +85,11 @@ def asset_flow_context(snipeit_client, snipeit_resource_factory, unique_name):
     context.cleanup_assignments()
 
 
-@allure.feature('Snipe-IT asset checkout and checkin')
+@allure.feature('资产领用、归还与数据一致性')
 class TestAssetFlows:
 
     @pytest.mark.smoke
-    @allure.title('FLOW-001 Check out a deployable asset to a user')
+    @allure.title('FLOW-001 将可领用设备分配给用户')
     def test_checkout_asset_to_user(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -103,7 +103,7 @@ class TestAssetFlows:
         assert actual['assigned_to']['type'] == 'user'
 
     @pytest.mark.regression
-    @allure.title('FLOW-002 Reject a second checkout of the same asset')
+    @allure.title('FLOW-002 拒绝重复领用同一设备')
     def test_duplicate_checkout_is_rejected(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -118,7 +118,7 @@ class TestAssetFlows:
         assert actual['assigned_to']['id'] == context.user['id']
 
     @pytest.mark.regression
-    @allure.title('FLOW-003 Reject checkout of a pending asset')
+    @allure.title('FLOW-003 Pending 状态设备禁止领用')
     def test_pending_asset_cannot_be_checked_out(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset(context.pending_status_id)
@@ -131,7 +131,7 @@ class TestAssetFlows:
         assert actual['assigned_to'] is None
 
     @pytest.mark.regression
-    @allure.title('FLOW-004 Reject checkout to an unknown user')
+    @allure.title('FLOW-004 不存在的用户不能领用设备')
     def test_checkout_to_unknown_user_is_rejected(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -144,7 +144,7 @@ class TestAssetFlows:
         assert actual['assigned_to'] is None
 
     @pytest.mark.smoke
-    @allure.title('FLOW-005 Query assets assigned to a user')
+    @allure.title('FLOW-005 查询用户已领用的资产')
     def test_query_assets_assigned_to_user(self, asset_flow_context):
         context = asset_flow_context
         asset, expected = context.create_asset()
@@ -161,7 +161,7 @@ class TestAssetFlows:
         assert matches[0]['id'] == asset['id']
 
     @pytest.mark.smoke
-    @allure.title('FLOW-006 Check in an assigned asset')
+    @allure.title('FLOW-006 正常归还已领用设备')
     def test_checkin_asset(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -176,7 +176,7 @@ class TestAssetFlows:
         assert actual['status_label']['id'] == context.ready_status_id
 
     @pytest.mark.regression
-    @allure.title('FLOW-007 Reject a second checkin of the same asset')
+    @allure.title('FLOW-007 拒绝重复归还同一设备')
     def test_duplicate_checkin_is_rejected(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -192,7 +192,7 @@ class TestAssetFlows:
         assert actual['assigned_to'] is None
 
     @pytest.mark.regression
-    @allure.title('FLOW-008 Asset history contains checkout and checkin events')
+    @allure.title('FLOW-008 操作历史包含领用和归还记录')
     def test_asset_history(self, asset_flow_context):
         context = asset_flow_context
         asset, _ = context.create_asset()
@@ -207,7 +207,7 @@ class TestAssetFlows:
         assert 'checkin from' in action_types
 
     @pytest.mark.smoke
-    @allure.title('FLOW-009 MySQL assignment state matches the API')
+    @allure.title('FLOW-009 MySQL 资产领用状态与 API 一致')
     def test_mysql_assignment_state(self, asset_flow_context, snipeit_db):
         context = asset_flow_context
         asset, expected = context.create_asset()
@@ -229,7 +229,7 @@ class TestAssetFlows:
         assert api_asset['assigned_to']['id'] == db_asset['assigned_to']
 
     @pytest.mark.regression
-    @allure.title('FLOW-010 MySQL contains complete checkout and checkin logs')
+    @allure.title('FLOW-010 MySQL 包含完整的领用和归还审计日志')
     def test_mysql_checkout_and_checkin_logs(self, asset_flow_context, snipeit_db):
         context = asset_flow_context
         asset, _ = context.create_asset()

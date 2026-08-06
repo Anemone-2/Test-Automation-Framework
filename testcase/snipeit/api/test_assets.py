@@ -63,11 +63,11 @@ def create_asset(asset_dependencies, snipeit_resource_factory, unique_name):
     return create
 
 
-@allure.feature('Snipe-IT hardware asset management')
+@allure.feature('硬件资产管理')
 class TestAssetManagement:
 
     @pytest.mark.smoke
-    @allure.title('ASSET-002 Create a deployable hardware asset')
+    @allure.title('ASSET-002 创建可领用状态的硬件资产')
     def test_create_deployable_asset(self, create_asset, snipeit_client):
         asset, expected = create_asset()
 
@@ -86,9 +86,9 @@ class TestAssetManagement:
             ('model_id', 'model_id'),
             ('status_id', 'status_id'),
         ],
-        ids=['missing-model', 'missing-status'],
+        ids=['缺少资产型号', '缺少资产状态'],
     )
-    @allure.title('ASSET-003 Reject an asset missing a required relation')
+    @allure.title('ASSET-003 缺少型号或状态时拒绝创建资产')
     def test_create_asset_missing_required_relation(
             self,
             missing_field,
@@ -120,9 +120,9 @@ class TestAssetManagement:
             ('model_id', 'model_id'),
             ('status_id', 'status_id'),
         ],
-        ids=['unknown-model', 'unknown-status'],
+        ids=['型号不存在', '状态不存在'],
     )
-    @allure.title('ASSET-004 Reject an asset with an unknown relation')
+    @allure.title('ASSET-004 型号或状态不存在时拒绝创建资产')
     def test_create_asset_with_unknown_relation(
             self,
             invalid_field,
@@ -148,7 +148,7 @@ class TestAssetManagement:
         assert expected_error in body['messages'], body
 
     @pytest.mark.regression
-    @allure.title('ASSET-005 Reject a duplicate asset tag')
+    @allure.title('ASSET-005 重复资产标签时拒绝创建资产')
     def test_duplicate_asset_tag_is_rejected(
             self,
             create_asset,
@@ -185,7 +185,7 @@ class TestAssetManagement:
         assert exact_matches[0]['id'] == original['id']
 
     @pytest.mark.smoke
-    @allure.title('ASSET-006 Query hardware details by ID')
+    @allure.title('ASSET-006 按资产 ID 查询设备详情')
     def test_get_asset_by_id(self, create_asset, snipeit_client):
         asset, expected = create_asset()
 
@@ -199,7 +199,7 @@ class TestAssetManagement:
         assert actual['notes'] == expected['notes']
 
     @pytest.mark.smoke
-    @allure.title('ASSET-007 Query hardware by its unique asset tag')
+    @allure.title('ASSET-007 按唯一资产标签查询设备')
     def test_get_asset_by_tag(self, create_asset, snipeit_client):
         asset, expected = create_asset()
 
@@ -213,7 +213,7 @@ class TestAssetManagement:
         assert actual['asset_tag'] == expected['asset_tag']
 
     @pytest.mark.regression
-    @allure.title('ASSET-008 Filter assets by keyword, status and model')
+    @allure.title('ASSET-008 按关键词、状态和型号组合筛选资产')
     def test_filter_assets(
             self,
             create_asset,
@@ -240,7 +240,7 @@ class TestAssetManagement:
         assert exact_matches[0]['model']['id'] == expected['model_id']
 
     @pytest.mark.regression
-    @allure.title('ASSET-009 Update an asset name and notes')
+    @allure.title('ASSET-009 修改资产名称和备注')
     def test_update_asset(self, create_asset, snipeit_client):
         asset, _ = create_asset()
         changes = {
@@ -260,7 +260,7 @@ class TestAssetManagement:
         assert actual['notes'] == changes['notes']
 
     @pytest.mark.regression
-    @allure.title('ASSET-010 Delete an unassigned hardware asset')
+    @allure.title('ASSET-010 删除未领用的硬件资产')
     def test_delete_asset(
             self,
             create_asset,

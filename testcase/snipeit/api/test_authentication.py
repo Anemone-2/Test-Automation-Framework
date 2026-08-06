@@ -7,11 +7,11 @@ from base.snipeit_client import SnipeItClient
 pytestmark = [pytest.mark.snipeit, pytest.mark.api]
 
 
-@allure.feature('Snipe-IT API authentication')
+@allure.feature('API 接口鉴权')
 class TestAuthentication:
 
     @pytest.mark.smoke
-    @allure.title('AUTH-001 Valid token returns the current administrator')
+    @allure.title('AUTH-001 有效 Token 可以查询当前管理员')
     def test_valid_token_returns_current_user(self, snipeit_client, snipeit_settings):
         response = snipeit_client.get('users/me')
 
@@ -22,7 +22,7 @@ class TestAuthentication:
         assert body['activated'] is True
 
     @pytest.mark.smoke
-    @allure.title('AUTH-002 Missing token is rejected')
+    @allure.title('AUTH-002 缺少 Token 访问用户列表时被拒绝')
     def test_missing_token_is_rejected(self, anonymous_snipeit_client):
         response = anonymous_snipeit_client.get('users', params={'limit': 1})
 
@@ -30,7 +30,7 @@ class TestAuthentication:
         assert response.headers['Content-Type'].startswith('application/json')
 
     @pytest.mark.regression
-    @allure.title('AUTH-003 Invalid token is rejected')
+    @allure.title('AUTH-003 无效 Token 访问用户列表时被拒绝')
     def test_invalid_token_is_rejected(self, snipeit_settings):
         client = SnipeItClient(snipeit_settings, token='invalid-test-token')
         try:
