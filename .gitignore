@@ -18,3 +18,6 @@ metrics/*.inspect.ndjson
 
 # Runtime values extracted from API responses (tokens, IDs, cookies)
 extract.yaml
+
+# Local Snipe-IT runtime configuration (contains credentials and APP_KEY)
+infra/snipeit/.env
