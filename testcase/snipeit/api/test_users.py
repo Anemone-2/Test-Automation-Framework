@@ -1,25 +1,10 @@
 import allure
 import pytest
 
+from testcase.snipeit.helpers import build_user_payload
+
 
 pytestmark = [pytest.mark.snipeit, pytest.mark.api]
-
-
-def build_user_payload(unique_name, **overrides):
-    username = overrides.pop('username', unique_name('user'))
-    password = f"Snipe@{unique_name('password')[-10:]}A1"
-    payload = {
-        'first_name': 'Automation',
-        'last_name': 'User',
-        'username': username,
-        'email': f'{username}@example.test',
-        'password': password,
-        'password_confirmation': password,
-        'activated': True,
-        'jobtitle': 'Test Engineer',
-    }
-    payload.update(overrides)
-    return payload
 
 
 def track_unexpected_success(factory, body):

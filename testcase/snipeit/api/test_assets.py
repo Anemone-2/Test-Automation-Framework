@@ -1,19 +1,10 @@
 import allure
 import pytest
 
+from testcase.snipeit.helpers import find_status_id
+
 
 pytestmark = [pytest.mark.snipeit, pytest.mark.api]
-
-
-def find_status_id(client, status_type):
-    response = client.get('statuslabels', params={'limit': 100})
-    assert response.status_code == 200
-    matches = [
-        row for row in response.json()['rows']
-        if row['type'] == status_type
-    ]
-    assert matches, f'Status label not found: {status_type}'
-    return matches[0]['id']
 
 
 def track_unexpected_success(factory, endpoint, body):

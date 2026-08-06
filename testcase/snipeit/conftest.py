@@ -5,6 +5,7 @@ import allure
 import pytest
 
 from base.snipeit_client import SnipeItClient
+from common.snipeit_database import SnipeItDatabase
 from conf.snipeit_settings import SnipeItSettings
 
 
@@ -107,3 +108,8 @@ def snipeit_resource_factory(snipeit_client):
     factory = SnipeItResourceFactory(snipeit_client)
     yield factory
     factory.cleanup()
+
+
+@pytest.fixture
+def snipeit_db(snipeit_settings):
+    return SnipeItDatabase(snipeit_settings)
