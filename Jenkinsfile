@@ -7,9 +7,9 @@ pipeline {
     }
 
     environment {
-        PROJECT_DIR = 'D:/Test-Automation-Framework-main/Test-Automation-Framework-main'
-        VENV_DIR = 'D:/Test-Automation-Framework-main/Test-Automation-Framework-main/.jenkins-venv'
-        PYTHON_EXE = 'D:/Test-Automation-Framework-main/Test-Automation-Framework-main/.jenkins-venv/Scripts/python.exe'
+        PROJECT_DIR = "${WORKSPACE}"
+        VENV_DIR = "${WORKSPACE}/.jenkins-venv"
+        PYTHON_EXE = "${WORKSPACE}/.jenkins-venv/Scripts/python.exe"
         API_HOST = 'http://127.0.0.1:8787'
     }
 
