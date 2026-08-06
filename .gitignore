@@ -14,6 +14,7 @@ __pycache__/
 logs/
 report/
 metrics/.builder/
+metrics/*.inspect.ndjson
 
 # Runtime values extracted from API responses (tokens, IDs, cookies)
 extract.yaml
