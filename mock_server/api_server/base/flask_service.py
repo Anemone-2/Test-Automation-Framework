@@ -651,7 +651,7 @@ def check_login_dw():
     if user_name and password:
         if user_name == 'test123' and password == 'qwe666':
             response = {"success": True, "code": 0, "msg": "调用成功", "data": {
-                "user_token": "eyJhbGciOiJIUzI1NiIsIlR5cGUiOiJKd3QiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2ODQ0NjI5NTksInVzZXJJZCI6M30.9FFj22mG7DImBG0KA4vS-DlkALyKGH_9erXM5Q8E44s"},
+                "user_token": "mock-user-token-for-automation-tests"},
                         "pageNum": 1, "pageSize": 10, "total": 0, "noDealTotal": 0, "planId": None, "other": None}
             return jsonify(response)
     else:
