@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -27,16 +27,20 @@ def _read_env_file(path):
 @dataclass(frozen=True)
 class SnipeItSettings:
     base_url: str
-    api_token: str
+    api_token: str = field(repr=False)
     admin_username: str
-    admin_password: str
+    admin_password: str = field(repr=False)
     admin_email: str
     api_timeout: float
+    browser: str
+    driver_path: str
+    headless: bool
+    ui_timeout: float
     db_host: str
     db_port: int
     db_name: str
     db_username: str
-    db_password: str
+    db_password: str = field(repr=False)
 
     @classmethod
     def load(cls):
@@ -66,6 +70,12 @@ class SnipeItSettings:
             admin_password=value('SNIPEIT_ADMIN_PASSWORD', ''),
             admin_email=value('SNIPEIT_ADMIN_EMAIL', ''),
             api_timeout=float(value('SNIPEIT_API_TIMEOUT', '10')),
+            browser=value('SNIPEIT_BROWSER', 'edge').lower(),
+            driver_path=value('SNIPEIT_DRIVER_PATH', ''),
+            headless=value('SNIPEIT_HEADLESS', 'true').lower() in {
+                '1', 'true', 'yes', 'on',
+            },
+            ui_timeout=float(value('SNIPEIT_UI_TIMEOUT', '10')),
             db_host=value('SNIPEIT_DB_HOST', '127.0.0.1'),
             db_port=int(value('DB_HOST_PORT', '13307')),
             db_name=value('DB_DATABASE', 'snipeit'),

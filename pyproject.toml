@@ -19,6 +19,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "redis>=5.2.1",
     "requests>=2.32.3",
+    "selenium>=4.27,<5",
     "sqlalchemy>=2.0.36",
     "xlrd>=2.0.1",
     "xlutils>=2.0.0",
@@ -26,5 +27,5 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["base*", "common*", "conf*"]
+include = ["base*", "common*", "conf*", "pages*"]
 exclude = ["data*", "demo*", "mock_server*", "report*", "testcase*"]
