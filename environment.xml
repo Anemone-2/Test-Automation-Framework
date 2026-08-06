@@ -1,7 +1,7 @@
 <environment>
     <parameter>
         <key>TestType</key>
-        <value>API Automation</value>
+        <value>API + Web Automation</value>
     </parameter>
     <parameter>
         <key>system</key>
@@ -17,18 +17,18 @@
     </parameter>
     <parameter>
         <key>BaseUrl</key>
-        <value>http://127.0.0.1:8787</value>
+        <value>http://localhost:8090</value>
     </parameter>
     <parameter>
         <key>environment</key>
-        <value>Local Mock</value>
+        <value>Local Docker</value>
     </parameter>
     <parameter>
         <key>Project</key>
-        <value>Test Automation Framework</value>
+        <value>Snipe-IT Asset Management Automation</value>
     </parameter>
     <parameter>
         <key>DataStores</key>
-        <value>MySQL, Redis, MongoDB, ClickHouse</value>
+        <value>MariaDB (MySQL compatible)</value>
     </parameter>
 </environment>
