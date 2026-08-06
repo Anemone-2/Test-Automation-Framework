@@ -26,6 +26,21 @@ class SnipeItResourceFactory:
         self.created.append((endpoint, resource['id']))
         return resource
 
+    def track(self, endpoint, resource_id):
+        resource = (endpoint, resource_id)
+        if resource not in self.created:
+            self.created.append(resource)
+
+    def delete(self, endpoint, resource_id):
+        response = self.client.delete(f'{endpoint}/{resource_id}')
+        assert response.status_code == 200
+        body = response.json()
+        assert body['status'] == 'success', body
+        resource = (endpoint, resource_id)
+        if resource in self.created:
+            self.created.remove(resource)
+        return body
+
     def cleanup(self):
         errors = []
         for endpoint, resource_id in reversed(self.created):
