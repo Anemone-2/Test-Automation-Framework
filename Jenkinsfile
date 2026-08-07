@@ -79,7 +79,7 @@ pipeline {
                         powershell '''
                             $ErrorActionPreference = 'Stop'
                             & powershell.exe -NoProfile -ExecutionPolicy Bypass `
-                                -File .\scripts\snipeit_ci_start.ps1 `
+                                -File ./scripts/snipeit_ci_start.ps1 `
                                 -EnvFile $env:SNIPEIT_ENV_FILE
                             if ($LASTEXITCODE -ne 0) {
                                 throw "Starting the Snipe-IT CI environment failed: $LASTEXITCODE"
@@ -114,7 +114,7 @@ pipeline {
                             New-Item -ItemType Directory -Force -Path $env:ALLURE_RESULTS | Out-Null
                             $pytestArguments = @(
                                 '-m', 'pytest',
-                                '-q', '.\testcase\snipeit',
+                                '-q', './testcase/snipeit',
                                 '-m', $markerExpression,
                                 "--alluredir=$env:ALLURE_RESULTS",
                                 '--clean-alluredir',
@@ -144,7 +144,7 @@ pipeline {
                         ]) {
                             powershell '''
                                 & powershell.exe -NoProfile -ExecutionPolicy Bypass `
-                                    -File .\scripts\snipeit_ci_stop.ps1 `
+                                    -File ./scripts/snipeit_ci_stop.ps1 `
                                     -EnvFile $env:SNIPEIT_ENV_FILE
                                 if ($LASTEXITCODE -ne 0) {
                                     throw "Stopping the Snipe-IT CI environment failed: $LASTEXITCODE"
