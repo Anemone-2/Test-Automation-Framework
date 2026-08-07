@@ -4,13 +4,45 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    parameters {
+        string(
+            name: 'SNIPEIT_ENV_CREDENTIAL_ID',
+            defaultValue: 'snipeit-env-file',
+            description: 'Jenkins Secret file credential containing the Snipe-IT .env file'
+        )
+        string(
+            name: 'PYTHON_BOOTSTRAP',
+            defaultValue: 'D:/python/python.exe',
+            description: 'Python executable used to create the Jenkins virtual environment'
+        )
+        choice(
+            name: 'TEST_SCOPE',
+            choices: ['all', 'smoke', 'api', 'web'],
+            description: 'Snipe-IT test set to execute'
+        )
+        choice(
+            name: 'BROWSER',
+            choices: ['edge', 'chrome'],
+            description: 'Browser used by Selenium Web tests'
+        )
+        booleanParam(
+            name: 'HEADLESS',
+            defaultValue: true,
+            description: 'Run Selenium without displaying the browser window'
+        )
     }
 
     environment {
         PROJECT_DIR = "${WORKSPACE}"
         VENV_DIR = "${WORKSPACE}/.jenkins-venv"
         PYTHON_EXE = "${WORKSPACE}/.jenkins-venv/Scripts/python.exe"
-        API_HOST = 'http://127.0.0.1:8787'
+        RESULT_ROOT = "${WORKSPACE}/ci-results"
+        ALLURE_RESULTS = "${WORKSPACE}/ci-results/allure-results"
+        JUNIT_XML = "${WORKSPACE}/ci-results/junit.xml"
     }
 
     stages {
@@ -19,49 +51,81 @@ pipeline {
                 dir("${env.PROJECT_DIR}") {
                     powershell '''
                         $ErrorActionPreference = 'Stop'
+                        $bootstrap = Get-Command $env:PYTHON_BOOTSTRAP -ErrorAction Stop
                         if (-not (Test-Path -LiteralPath $env:PYTHON_EXE)) {
-                            & 'D:/python/python.exe' -m venv $env:VENV_DIR
+                            & $bootstrap.Source -m venv $env:VENV_DIR
                             if ($LASTEXITCODE -ne 0) {
-                                throw "Creating the Jenkins virtual environment failed with exit code $LASTEXITCODE"
+                                throw "Creating the Jenkins virtual environment failed: $LASTEXITCODE"
                             }
                         }
                         & $env:PYTHON_EXE -m pip install --disable-pip-version-check -e .
                         if ($LASTEXITCODE -ne 0) {
-                            throw "Installing Python dependencies failed with exit code $LASTEXITCODE"
+                            throw "Installing Python dependencies failed: $LASTEXITCODE"
                         }
                     '''
                 }
             }
         }
 
-        stage('Start Test Environment') {
+        stage('Start Snipe-IT') {
             steps {
                 dir("${env.PROJECT_DIR}") {
-                    powershell '''
-                        & ./scripts/ci_start.ps1 -PythonExe $env:PYTHON_EXE
-                    '''
+                    withCredentials([
+                        file(
+                            credentialsId: "${params.SNIPEIT_ENV_CREDENTIAL_ID}",
+                            variable: 'SNIPEIT_ENV_FILE'
+                        )
+                    ]) {
+                        powershell '''
+                            $ErrorActionPreference = 'Stop'
+                            & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+                                -File .\scripts\snipeit_ci_start.ps1 `
+                                -EnvFile $env:SNIPEIT_ENV_FILE
+                            if ($LASTEXITCODE -ne 0) {
+                                throw "Starting the Snipe-IT CI environment failed: $LASTEXITCODE"
+                            }
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Run Pytest') {
+        stage('Run Snipe-IT Tests') {
             steps {
                 dir("${env.PROJECT_DIR}") {
-                    powershell '''
-                        $ErrorActionPreference = 'Stop'
-                        $resultRoot = Join-Path $env:WORKSPACE 'ci-results'
-                        $allureResults = Join-Path $resultRoot 'allure-results'
-                        $junitXml = Join-Path $resultRoot 'junit.xml'
-                        New-Item -ItemType Directory -Force -Path $allureResults | Out-Null
-                        & $env:PYTHON_EXE -m pytest -s -v ./testcase `
-                            -m 'not integration or integration' `
-                            --alluredir=$allureResults `
-                            --clean-alluredir `
-                            --junitxml=$junitXml
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Pytest failed with exit code $LASTEXITCODE"
-                        }
-                    '''
+                    withCredentials([
+                        file(
+                            credentialsId: "${params.SNIPEIT_ENV_CREDENTIAL_ID}",
+                            variable: 'SNIPEIT_ENV_FILE'
+                        )
+                    ]) {
+                        powershell '''
+                            $ErrorActionPreference = 'Stop'
+                            $env:SNIPEIT_BROWSER = $env:BROWSER
+                            $env:SNIPEIT_HEADLESS = $env:HEADLESS.ToLowerInvariant()
+
+                            $markerExpression = switch ($env:TEST_SCOPE) {
+                                'smoke' { 'snipeit and smoke' }
+                                'api' { 'snipeit and api' }
+                                'web' { 'snipeit and web' }
+                                default { 'snipeit' }
+                            }
+
+                            New-Item -ItemType Directory -Force -Path $env:ALLURE_RESULTS | Out-Null
+                            $pytestArguments = @(
+                                '-m', 'pytest',
+                                '-q', '.\testcase\snipeit',
+                                '-m', $markerExpression,
+                                "--alluredir=$env:ALLURE_RESULTS",
+                                '--clean-alluredir',
+                                "--junitxml=$env:JUNIT_XML"
+                            )
+                            & $env:PYTHON_EXE @pytestArguments
+                            if ($LASTEXITCODE -ne 0) {
+                                throw "Snipe-IT tests failed: $LASTEXITCODE"
+                            }
+                        '''
+                    }
                 }
             }
         }
@@ -69,10 +133,29 @@ pipeline {
 
     post {
         always {
-            powershell '''
-                & "$env:PROJECT_DIR/scripts/ci_stop.ps1"
-            '''
-            junit allowEmptyResults: true, testResults: 'ci-results/junit.xml'
+            script {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    dir("${env.PROJECT_DIR}") {
+                        withCredentials([
+                            file(
+                                credentialsId: "${params.SNIPEIT_ENV_CREDENTIAL_ID}",
+                                variable: 'SNIPEIT_ENV_FILE'
+                            )
+                        ]) {
+                            powershell '''
+                                & powershell.exe -NoProfile -ExecutionPolicy Bypass `
+                                    -File .\scripts\snipeit_ci_stop.ps1 `
+                                    -EnvFile $env:SNIPEIT_ENV_FILE
+                                if ($LASTEXITCODE -ne 0) {
+                                    throw "Stopping the Snipe-IT CI environment failed: $LASTEXITCODE"
+                                }
+                            '''
+                        }
+                    }
+                }
+            }
+            junit allowEmptyResults: true,
+                  testResults: 'ci-results/junit.xml'
             allure includeProperties: false,
                    jdk: 'JDK21',
                    results: [[path: 'ci-results/allure-results']]

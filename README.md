@@ -121,7 +121,11 @@ Test-Automation-Framework-main/
 │  ├─ helpers.py                    # 测试数据辅助方法
 │  ├─ api/                          # API 与数据库测试
 │  └─ web/                          # Selenium Web 测试
+├─ scripts/
+│  ├─ snipeit_ci_start.ps1          # CI 环境启动和健康检查
+│  └─ snipeit_ci_stop.ps1           # CI 环境安全停止
 ├─ report/                          # 本地 Allure/JUnit 输出，默认不提交
+├─ Jenkinsfile                      # Snipe-IT Jenkins Pipeline
 ├─ pyproject.toml                   # Python 项目和依赖配置
 └─ pytest.ini                       # Pytest 配置和 Marker
 ```
@@ -298,22 +302,77 @@ docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose
 
 ## 持续集成状态
 
-仓库保留了原自动化框架的 `Jenkinsfile`，但它目前仍主要面向旧 Mock 服务。Snipe-IT 专用流水线迁移尚未完成，现阶段请使用本文中的 Docker Compose 和 Pytest 命令执行新套件。
+项目已经提供 Snipe-IT 专用 `Jenkinsfile`，流水线可以完成：
 
-计划中的 Snipe-IT CI 流程：
+1. 拉取代码并创建或复用 Jenkins Python 虚拟环境。
+2. 从 Jenkins Secret file Credential 注入 Snipe-IT `.env`。
+3. 启动 Snipe-IT 和 MariaDB，并等待数据库健康及 Web 服务可访问。
+4. 按构建参数执行全量、冒烟、API 或 Web 测试。
+5. 发布 JUnit XML、Allure 报告并归档构建产物。
+6. 无论测试成功或失败都执行环境收尾。
+7. 如果容器在构建前已经运行，流水线会复用并保留它们；如果由本次构建启动，则构建后自动停止。
 
-1. 拉取代码并创建 Python 虚拟环境。
-2. 注入本地或 Jenkins Credentials 中的 Snipe-IT 配置。
-3. 启动 Snipe-IT 和 MariaDB 容器并等待健康检查。
-4. 执行 `testcase/snipeit`。
-5. 发布 JUnit XML 和 Allure 报告。
-6. 无论成功或失败都执行环境清理。
+### Jenkins 插件和工具
+
+确认 Jenkins 已安装：
+
+- Pipeline
+- Git
+- Credentials Binding
+- JUnit
+- Allure Jenkins Plugin
+
+在“全局工具配置”中配置：
+
+- JDK 名称：`JDK21`
+- Allure Commandline
+
+### 配置 Snipe-IT Secret file
+
+1. 在本地确认 `infra/snipeit/.env` 可以运行当前38条测试。
+2. 进入“管理 Jenkins → Credentials → System → Global credentials”。
+3. 新建凭据，类型选择“Secret file”。
+4. 上传本地 `infra/snipeit/.env`。
+5. 凭据 ID 设置为 `snipeit-env-file`。
+
+流水线只读取该临时文件，不会将密码、Token 或 `APP_KEY` 复制到Git工作区。
+
+### 创建 Pipeline 任务
+
+1. 新建一个 Pipeline 任务。
+2. Definition 选择“Pipeline script from SCM”。
+3. SCM 选择 Git，并填写本项目仓库地址。
+4. Script Path 填写 `Jenkinsfile`。
+5. 保存后先执行一次构建，使参数出现在“Build with Parameters”页面。
+
+可用参数：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `SNIPEIT_ENV_CREDENTIAL_ID` | `snipeit-env-file` | Secret file凭据ID |
+| `PYTHON_BOOTSTRAP` | `D:/python/python.exe` | Jenkins机器上的Python路径 |
+| `TEST_SCOPE` | `all` | `all`、`smoke`、`api`或`web` |
+| `BROWSER` | `edge` | `edge`或`chrome` |
+| `HEADLESS` | `true` | 是否无界面运行Web测试 |
+
+### 首次运行限制
+
+当前流水线能够自动启动容器，但Snipe-IT数据库卷必须已经完成一次初始化，并包含管理员账号、API Token和必要状态标签。全新的Jenkins机器需要先按照“首次配置”章节完成一次初始化。
+
+后续计划继续实现全新环境下的管理员和API Token自动引导，使流水线不依赖预初始化的Docker Volume。
+
+如果在本地手工验证CI脚本时遇到“running scripts is disabled”提示，可以使用一次性的执行策略绕过；该命令不会修改系统级PowerShell策略：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
+  .\scripts\snipeit_ci_start.ps1 -EnvFile .\infra\snipeit\.env
+```
 
 ## 历史框架说明
 
 本仓库由通用接口自动化框架演进而来，因此仍保留 Flask Mock、YAML、Redis、MongoDB、ClickHouse、邮件和钉钉通知等历史模块。当前企业资产管理项目的有效入口是 `testcase/snipeit`，上述历史模块不计入当前 Snipe-IT 测试覆盖。
 
-后续会逐步完成 Jenkins 迁移、文档整理和历史目录清理，使仓库结构与当前业务保持一致。
+后续会逐步完成全新CI环境自动初始化和历史目录清理，使仓库结构与当前业务保持一致。
 
 ## License
 
