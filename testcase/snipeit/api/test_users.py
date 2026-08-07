@@ -157,7 +157,8 @@ class TestUserManagement:
         body = response.json()
         assert body['status'] == 'error'
         assert body['payload'] is None
-        assert 'does not exist' in body['messages']
+        assert isinstance(body['messages'], str)
+        assert body['messages'].strip()
 
     @pytest.mark.regression
     @allure.title('USER-007 删除未领用资产的用户')

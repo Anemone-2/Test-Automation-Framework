@@ -202,9 +202,22 @@ class TestAssetFlows:
         response = context.client.get(f"hardware/{asset['id']}/history")
 
         assert response.status_code == 200
-        action_types = {row['action_type'] for row in response.json()['rows']}
-        assert 'checkout' in action_types
-        assert 'checkin from' in action_types
+        rows = response.json()['rows']
+        checkout = next(
+            row for row in rows
+            if row['note'] == 'Checked out by the automation suite'
+        )
+        checkin = next(
+            row for row in rows
+            if row['note'] == 'Checked in by the automation suite'
+        )
+
+        assert checkout['target']['id'] == context.user['id']
+        assert checkout['target']['type'] == 'user'
+        assert checkout['action_source'] == 'api'
+        assert checkin['target']['id'] == context.user['id']
+        assert checkin['target']['type'] == 'user'
+        assert checkin['action_source'] == 'api'
 
     @pytest.mark.smoke
     @allure.title('FLOW-009 MySQL 资产领用状态与 API 一致')

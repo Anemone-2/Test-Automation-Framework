@@ -6,12 +6,16 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.edge.service import Service as EdgeService
 
+from pages.login_page import LoginPage
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
     setattr(item, f'rep_{report.when}', report)
+
+
 def build_driver(settings):
     if settings.browser == 'edge':
         options = webdriver.EdgeOptions()
@@ -84,3 +88,16 @@ def browser_driver(request, snipeit_settings):
             attachment_type=allure.attachment_type.HTML,
         )
     driver.quit()
+
+
+@pytest.fixture
+def logged_in_driver(browser_driver, snipeit_settings):
+    LoginPage(
+        browser_driver,
+        snipeit_settings.base_url,
+        snipeit_settings.ui_timeout,
+    ).open().login(
+        snipeit_settings.admin_username,
+        snipeit_settings.admin_password,
+    )
+    return browser_driver

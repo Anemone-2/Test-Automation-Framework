@@ -34,5 +34,5 @@ class TestWebLogin:
                 snipeit_settings.base_url,
                 snipeit_settings.ui_timeout,
             ).open()
-            assert assets_page.heading() == 'Assets'
+            assert assets_page.heading() == '资产'
             assert assets_page.is_search_available()
