@@ -18,3 +18,18 @@ class AssetDetailsPage(BasePage):
             return all(value in page_text for value in expected_values)
 
         return bool(self.wait.until(values_are_visible))
+
+    def has_checkout_action(self, asset_id):
+        return self._has_asset_action(asset_id, 'checkout')
+
+    def has_checkin_action(self, asset_id):
+        return self._has_asset_action(asset_id, 'checkin')
+
+    def _has_asset_action(self, asset_id, action):
+        locator = (
+            By.CSS_SELECTOR,
+            f'a[href$="/hardware/{asset_id}/{action}"]',
+        )
+        return self.wait.until(
+            ec.visibility_of_element_located(locator),
+        ).is_enabled()
