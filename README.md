@@ -1,198 +1,320 @@
-# Test-Automation-Framework
+# Snipe-IT 企业资产管理自动化测试项目
 
-不少录友感觉 冲大厂的开发岗会比较难，但又想去大厂工作。
+基于 Python、Pytest、Requests 和 Selenium 构建的企业 IT 资产管理自动化测试项目，以开源资产管理系统 [Snipe-IT](https://snipeitapp.com/) 为真实测试对象，覆盖 REST API、Web UI、MariaDB 数据一致性以及资产领用、归还业务闭环。
 
-测开是一个选择，大厂测开的薪资和 开发基本是差不太多。
+项目地址：[https://github.com/Anemone-2/Test-Automation-Framework](https://github.com/Anemone-2/Test-Automation-Framework)
 
-又有录友问：那测开好还是开发好？
+## 项目简介
 
-我相信如果有能力冲 开发的录友 就不会问这个问题了吧。
+本项目围绕企业内部“员工—资产—领用—归还”的业务关系展开，不依赖简单的演示接口。被测系统通过 Docker Compose 独立部署，自动化测试通过 API 动态创建员工、分类、厂商、位置、型号和硬件资产，再从接口、数据库和 Web 页面三个层面验证业务结果。
 
-我只能说，如果自己能力或者学历不太行，想去大厂，测开相对来说 门槛低很多。
+当前主要实现：
 
-之前星球里就有不少录友冲测开，在项目方向都是用开发岗的项目，来面试的。
+- Snipe-IT API Token 鉴权测试
+- 员工创建、查询、修改、删除及异常校验
+- 资产基础数据和硬件资产 CRUD 测试
+- 资产领用、归还、操作历史及异常场景测试
+- API 响应与 MariaDB 数据一致性校验
+- Selenium Page Object Web 自动化
+- API 创建数据后通过 Web 列表和详情交叉验证
+- Allure 中文测试步骤、请求响应附件和失败截图
+- 测试数据动态生成、反向清理和异常兜底清理
+- Token、密码等敏感信息自动脱敏
 
-这次[知识星球](https://www.programmercarl.com/other/kstar.html)里给大家提供了专门准对测开的项目，**带大家从零开始手撸一个基于 Pytest 的自动化测试框架**。
+## 技术栈
 
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-47-24.jpg)
+| 分类 | 技术 |
+| --- | --- |
+| 编程语言 | Python 3.12+ |
+| 测试框架 | Pytest |
+| 接口自动化 | Requests、Snipe-IT REST API |
+| Web 自动化 | Selenium、Page Object Model |
+| 数据库校验 | MariaDB/MySQL、PyMySQL |
+| 环境部署 | Docker Compose |
+| 测试报告 | Allure、JUnit XML |
+| 配置管理 | `.env`、Python Dataclass |
+| 版本管理 | Git |
 
-项目在星球里已经发布了三个月了，不少星球录友已经用了这个项目。
+## 测试架构
 
-这三个月期间，我们有陆续完善这个项目，这才正式在公众号发公布。
+```mermaid
+flowchart LR
+    T["Pytest 测试用例"] --> F["Fixture 与测试数据工厂"]
+    T --> A["Requests API 客户端"]
+    T --> P["Selenium Page Object"]
+    T --> D["MariaDB 查询组件"]
+    A --> S["Snipe-IT REST API"]
+    P --> W["Snipe-IT Web UI"]
+    D --> M["MariaDB"]
+    S --> M
+    W --> M
+    T --> R["Allure / JUnit 报告"]
+```
 
-本项目是使用python语言开发。
+框架的主要分层：
 
-也有录友会想，我转冲测开 是不是还要学习一下python？
+- 配置层：从本地 `.env` 加载地址、账号、Token、浏览器和数据库配置。
+- 客户端层：统一处理 API 地址、请求头、超时、HTTP 429 重试和报告附件。
+- 页面层：封装登录、用户列表、用户详情、资产列表和资产详情页面。
+- 数据层：查询 MariaDB 中的资产状态、分配关系和审计日志。
+- 用例层：组织鉴权、员工、资产、领用归还和 API/Web 组合场景。
+- 报告层：输出 Allure、JUnit XML，失败时附加截图和页面源码。
 
-其实python很简单， 如果有C++或者Java基础，python的语法知识 两三天也就学的差不多了。
+## 当前测试覆盖
 
-测试框架通常与具体公司的业务密切相关，本项目专栏将重点介绍通用的框架设计思路和技术实现，帮助你掌握构建测试框架的核心原理和方法。
+| 模块 | 逻辑场景 | 实际执行数 | 主要内容 |
+| --- | ---: | ---: | --- |
+| API 鉴权 | 3 | 3 | 有效、缺失、无效 Token |
+| 员工管理 | 7 | 9 | CRUD、必填字段、重复用户名、业务错误 |
+| 资产管理 | 10 | 12 | 基础数据、CRUD、重复标签、组合查询、异常关联 |
+| 领用归还 | 10 | 10 | 领用、归还、异常状态、历史记录、数据库审计 |
+| Web 自动化 | 4 | 4 | 登录、员工详情、资产详情、领用归还闭环 |
+| **合计** | **34** | **38** | **API、Web、数据库联合验证** |
 
-## 一、接口测试的本质：功能测试的一部分
+最近一次本地完整回归结果：
 
-很多初学者在听到“接口测试”时，可能会感到困惑，认为这是一个完全独立于功能测试之外的测试类型。
+```text
+38 passed in 36.13s
+测试数据残留：0
+报告敏感信息命中：0
+```
 
-实际上，接口测试的本质仍然是功能测试。它只是将测试的对象从用户界面转移到了应用程序接口（API）上。
+> 执行时间取决于机器性能、容器状态和浏览器驱动版本，以上数据仅为当前环境的一次实测结果。
 
-换句话说，我们不再需要通过UI与系统交互，而是直接通过接口发送请求、接收响应，并验证响应结果是否符合预期。
+## 核心业务闭环
 
-## 二、从接口文档入手：测试用例的设计与实现
+`WEB-004` 覆盖了目前最完整的跨层业务场景：
 
-接口测试的第一步，从来都是获取接口文档。一个完整的接口文档通常包含以下几部分信息：
+1. 通过 API 创建员工、资产及相关基础数据。
+2. 通过 API 将可领用资产分配给员工。
+3. 查询 MariaDB，校验 `assigned_to` 和 `assigned_type`。
+4. 登录 Web，在资产详情中校验领用员工和“归还”入口。
+5. 通过 API 归还资产。
+6. 校验 API 和 MariaDB 中的分配关系已经清空。
+7. 刷新 Web 详情，校验资产重新出现“领用”入口。
+8. 测试结束后自动删除员工、资产及依赖数据。
 
-* 接口名称
-* 接口地址
-* 请求方法（GET, POST, PUT, DELETE等）
-* 请求头信息
-* 请求参数（必选参数与可选参数）
-* 返回值及其数据结构
+## 目录结构
 
-测试用例的设计围绕着如何验证接口的功能展开。我们通常会从以下几个方面入手：
+```text
+Test-Automation-Framework-main/
+├─ base/
+│  └─ snipeit_client.py             # Snipe-IT REST API 客户端
+├─ common/
+│  ├─ sensitive_data.py             # 敏感字段递归脱敏
+│  └─ snipeit_database.py           # MariaDB 查询封装
+├─ conf/
+│  └─ snipeit_settings.py           # 环境和浏览器配置
+├─ infra/snipeit/
+│  ├─ docker-compose.yml            # Snipe-IT + MariaDB
+│  ├─ .env.example                  # 本地配置模板
+│  └─ README.md                     # Docker 环境补充说明
+├─ pages/
+│  ├─ base_page.py                  # Page Object 基类
+│  ├─ login_page.py                 # 登录页面
+│  ├─ assets_page.py                # 资产列表页面
+│  ├─ asset_details_page.py         # 资产详情页面
+│  ├─ users_page.py                 # 用户列表页面
+│  └─ user_details_page.py          # 用户详情页面
+├─ testcase/snipeit/
+│  ├─ conftest.py                   # 公共 Fixture、数据工厂和清理机制
+│  ├─ helpers.py                    # 测试数据辅助方法
+│  ├─ api/                          # API 与数据库测试
+│  └─ web/                          # Selenium Web 测试
+├─ report/                          # 本地 Allure/JUnit 输出，默认不提交
+├─ pyproject.toml                   # Python 项目和依赖配置
+└─ pytest.ini                       # Pytest 配置和 Marker
+```
 
-1、 单接口测试：验证某一个接口在不同参数组合下的行为是否符合预期。测试点包括：
+## 环境要求
 
-* **正向测试**：使用正确的参数进行请求，验证返回值是否符合预期。
-* **反向测试**：使用错误或异常参数进行请求，验证接口是否能正确处理异常情况。
-* **边界测试**：例如对于要求固定长度的参数（如身份证号），测试其在不同长度下的响应情况。
+- Windows 10/11
+- Python 3.12 或更高版本
+- Docker Desktop
+- Microsoft Edge 或 Google Chrome
+- Java 17+ 和 Allure Commandline（查看 Allure 报告时需要）
+- Git
 
-2. 业务逻辑测试：验证多个接口之间的协同工作。
+Selenium 默认使用 Edge，并支持切换到 Chrome。首次运行时，Selenium Manager 可能需要下载匹配的浏览器驱动。
 
-例如，商品下单流程涉及多个接口，如库存检查、订单创建、支付确认等。这些接口之间存在依赖关系，测试时需要保证每个步骤的返回值都正确传递给下一个接口。
+## 首次配置
 
-## 三、接口调试与自动化：从Postman到持续集成
+### 1. 创建 Python 虚拟环境
 
-在正式编写自动化测试脚本之前，手动调试接口是不可或缺的一步。
-
-工具如Postman、JMeter等可以帮助我们快速验证接口的功能。
-
-通过这些工具，我们可以确认接口是否正常工作，参数是否正确传递，以及返回值是否符合预期。
-
-自动化测试的实现通常是将手动测试的步骤脚本化，并在代码中实现。
-
-例如，使用Python的requests库，我们可以轻松地编写自动化测试脚本，并将这些脚本集成到持续集成（CI）系统中，如Jenkins、GitLab CI等。
-
-通过CI，我们可以设定每日定时执行测试，并将测试结果推送到团队的沟通工具（如钉钉、Slack）中，确保所有成员都能及时了解到项目的健康状态。
-
-## 项目专栏
-
-接口测试是软件测试的一个重要组成部分，也是确保系统稳定性与可靠性的重要手段。
-
-我们将深入探讨如何通过代码实现接口测试的自动化，并逐步搭建一个完善的接口测试框架，帮助你在项目中更高效地进行测试工作。
-
-项目专栏在「简历写法」 下给大家列出来，指出项目在简历上应该突出什么：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-48-26.jpg)
-
-
-在给出具体的简历写法：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-48-54.jpg)
-
-这种测试框架的项目，已经要凸显出 性能优化的点：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-49-21.jpg)
-
-环境配置，很多录友做项目，配置环境，第一步就卡助了，专栏给出详细的操作步骤：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-49-44.jpg)
-
-项目代码看不懂怎么办？
-
-专栏有专门一个章节，帮助大家 梳理项目代码的逻辑，各个模块的数据流如下：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-50-07.jpg)
-
-做完该项目，面试中大概率会有哪些面试问题，以及如何回答，也列出好了：
-
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-50-31.jpg)
-
-**专栏中的项目面试题都掌握的话，这个项目在面试中基本没问题**。
-
-## 本地运行
-
-项目要求 Python 3.12 及以上版本，推荐使用独立虚拟环境。
+在项目根目录打开 PowerShell：
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -e .
-python -m pip install -e .\mock_server\api_server
 ```
 
-先在一个终端启动本地 Mock 服务：
+### 2. 创建本地环境配置
 
 ```powershell
-python .\mock_server\api_server\base\flask_service.py
+Copy-Item .\infra\snipeit\.env.example .\infra\snipeit\.env
+notepad .\infra\snipeit\.env
 ```
 
-再在另一个终端运行测试：
+至少需要替换以下占位值：
+
+- `APP_KEY`
+- `DB_PASSWORD`
+- `MYSQL_ROOT_PASSWORD`
+- `SNIPEIT_ADMIN_PASSWORD`
+- `SNIPEIT_API_TOKEN`
+
+可以在 PowerShell 中生成符合 Laravel 要求的随机 `APP_KEY`：
 
 ```powershell
-# 完整回归
-python -m pytest -s -v .\testcase
-
-# 核心业务冒烟
-python -m pytest -s -v -m smoke .\testcase
-
-# 生成 Allure 原始结果
-python -m pytest -s -v --alluredir=.\report\temp --clean-alluredir .\testcase
-allure serve .\report\temp
+$keyBytes = New-Object byte[] 32
+$keyGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$keyGenerator.GetBytes($keyBytes)
+"base64:$([Convert]::ToBase64String($keyBytes))"
+$keyGenerator.Dispose()
 ```
 
-也可以在 Mock 服务启动后执行 `python run.py`，一次完成全量测试、JUnit XML 输出和 Allure 本地预览。Mock 服务默认监听 `http://127.0.0.1:8787`。
+将输出结果完整填写到 `.env` 的 `APP_KEY` 中。
 
-## 真实数据一致性校验
+> `infra/snipeit/.env` 已被 Git 忽略。不要提交管理员密码、数据库密码、API Token 或真实业务数据。
 
-项目提供一套隔离的 Docker Compose 环境，用于验证接口数据与 MySQL、Redis、MongoDB、ClickHouse 的一致性。端口与本机常用默认端口错开：
-
-| 数据库 | 本机端口 |
-| --- | ---: |
-| MySQL | 13306 |
-| Redis | 16379 |
-| MongoDB | 27018 |
-| ClickHouse HTTP / Native | 18123 / 29000 |
-
-启动四个数据库：
+### 3. 启动 Snipe-IT 和 MariaDB
 
 ```powershell
-docker compose -f .\infra\docker-compose.yml up -d
-docker compose -f .\infra\docker-compose.yml ps
+docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose.yml up -d
+docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose.yml ps
 ```
 
-在一个终端以真实存储模式启动 Mock 服务：
+服务地址：
+
+| 服务 | 地址 |
+| --- | --- |
+| Snipe-IT | `http://localhost:8090` |
+| MariaDB | `127.0.0.1:13307` |
+
+首次启动后，访问 `http://localhost:8090` 完成 Snipe-IT 初始化向导，并创建自动化管理员账号。
+
+### 4. 创建 API Token
+
+使用管理员账号登录 Snipe-IT：
+
+1. 打开个人账号设置。
+2. 进入“管理 API 密钥”。
+3. 创建 Personal Access Token。
+4. 将 Token 写入 `.env` 的 `SNIPEIT_API_TOKEN`。
+5. 确认 `.env` 中的管理员用户名和密码与初始化账号一致。
+
+如果需要中文界面，将管理员语言设置为 `zh-CN`。
+
+## 执行测试
+
+### 完整回归
 
 ```powershell
-.\scripts\start_mock_with_datastores.ps1
+.\.venv\Scripts\python.exe -m pytest .\testcase\snipeit -q
 ```
 
-在另一个终端执行四库一致性测试：
+### 只运行 API 测试
 
 ```powershell
-.\scripts\run_data_validation.ps1
+.\.venv\Scripts\python.exe -m pytest .\testcase\snipeit -m "snipeit and api" -q
 ```
 
-该测试通过真实 API 创建用户和订单，随后验证：MySQL用户与订单记录、Redis订单状态、MongoDB审计事件以及ClickHouse业务事件。测试数据使用唯一标识，并在断言完成后清理MySQL、Redis和MongoDB临时记录；ClickHouse保留事件作为审计历史。
-
-停止数据库容器：
+### 只运行 Web 测试
 
 ```powershell
-docker compose -f .\infra\docker-compose.yml down
+.\.venv\Scripts\python.exe -m pytest .\testcase\snipeit -m "snipeit and web" -q
 ```
 
-`infra/docker-compose.yml` 中的账号密码仅用于本地演示环境，不应复用于生产或共享测试环境。
+### 运行核心冒烟场景
 
-当然项目专栏会对本项目代码做详细的讲解：
+```powershell
+.\.venv\Scripts\python.exe -m pytest .\testcase\snipeit -m "snipeit and smoke" -q
+```
 
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-50-55.jpg)
+### 同时生成 Allure 和 JUnit XML
 
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-51-17.jpg)
+```powershell
+.\.venv\Scripts\python.exe -m pytest .\testcase\snipeit -q `
+  --alluredir=.\report\temp-snipeit-all `
+  --clean-alluredir `
+  --junitxml=.\report\snipeit-junit.xml
+```
 
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-51-40.jpg)
+## 查看 Allure 报告
 
-最后如果大家想把这个项目做的更有深度，项目专栏最后一栏【项目优化】给大家指明 可以继续优化的点：
+```powershell
+allure serve .\report\temp-snipeit-all
+```
 
-![image](https://file1.kamacoder.com/i/web/2025-08-18_12-52-04.jpg)
+报告中可以查看：
 
-## 获取本项目专栏
+- 中文业务模块和用例标题
+- 每个业务步骤的执行结果
+- API 请求地址、参数和脱敏后的请求头
+- API 响应内容
+- 测试数据创建及清理结果
+- Web 失败截图和页面源码
+- 用例耗时、分类和失败堆栈
 
-**本文档仅为星球内部专享，大家可以加入[知识星球](https://www.programmercarl.com/other/kstar.html)里获取，在星球置顶一**。
+`allure serve` 仅用于本地预览，关闭对应终端后报告地址会失效。
+
+## 浏览器配置
+
+在 `infra/snipeit/.env` 中修改：
+
+```dotenv
+SNIPEIT_BROWSER=edge
+SNIPEIT_HEADLESS=true
+SNIPEIT_UI_TIMEOUT=10
+```
+
+支持：
+
+- `SNIPEIT_BROWSER=edge`
+- `SNIPEIT_BROWSER=chrome`
+- `SNIPEIT_HEADLESS=true`：无界面运行，适合回归和 CI
+- `SNIPEIT_HEADLESS=false`：显示浏览器，适合本地调试
+
+如果不使用 Selenium Manager，可以通过 `SNIPEIT_DRIVER_PATH` 指定本地驱动路径。
+
+## 测试数据与安全设计
+
+- 所有自动化数据使用 `autotest_` 前缀和随机 UUID，避免与已有数据冲突。
+- 资源工厂按照依赖关系反向删除资产、型号、位置、厂商、分类和员工。
+- 资产处于领用状态时，清理流程会先自动归还，再删除依赖数据。
+- API 请求和响应进入 Allure 前会递归脱敏 Token、密码和 Cookie。
+- 配置类的密码和 Token 字段不会显示在对象日志中。
+- `.env`、报告临时文件和本地数据库数据不应提交到 Git。
+
+## 停止环境
+
+```powershell
+docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose.yml down
+```
+
+日常停止环境不要添加 `-v`。`down -v` 会删除 MariaDB 和 Snipe-IT 持久化卷中的数据。
+
+## 持续集成状态
+
+仓库保留了原自动化框架的 `Jenkinsfile`，但它目前仍主要面向旧 Mock 服务。Snipe-IT 专用流水线迁移尚未完成，现阶段请使用本文中的 Docker Compose 和 Pytest 命令执行新套件。
+
+计划中的 Snipe-IT CI 流程：
+
+1. 拉取代码并创建 Python 虚拟环境。
+2. 注入本地或 Jenkins Credentials 中的 Snipe-IT 配置。
+3. 启动 Snipe-IT 和 MariaDB 容器并等待健康检查。
+4. 执行 `testcase/snipeit`。
+5. 发布 JUnit XML 和 Allure 报告。
+6. 无论成功或失败都执行环境清理。
+
+## 历史框架说明
+
+本仓库由通用接口自动化框架演进而来，因此仍保留 Flask Mock、YAML、Redis、MongoDB、ClickHouse、邮件和钉钉通知等历史模块。当前企业资产管理项目的有效入口是 `testcase/snipeit`，上述历史模块不计入当前 Snipe-IT 测试覆盖。
+
+后续会逐步完成 Jenkins 迁移、文档整理和历史目录清理，使仓库结构与当前业务保持一致。
+
+## License
+
+本项目代码遵循仓库中的 [LICENSE](./LICENSE)。Snipe-IT 本身遵循其官方开源许可证，本仓库不包含 Snipe-IT 源代码。
