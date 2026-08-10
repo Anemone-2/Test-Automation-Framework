@@ -26,7 +26,7 @@
 - LDAP、SCIM、双因素认证和邮件发送
 - CSV 批量导入与导出
 - 资产盘点、折旧、审计标签打印
-- Redis、MongoDB 和 ClickHouse
+- 非 Snipe-IT 使用的数据存储
 - 性能、渗透与破坏性测试
 
 ## 3. 核心业务流程
@@ -98,8 +98,8 @@ HTTP 状态码和 JSON 中的 `status`、`messages`、`payload` 等业务字段�
 - 清理顺序为：归还资产 → 删除资产 → 删除用户 → 删除型号 → 删除地点 →
   删除制造商 → 删除分类。
 - 即使用例失败，也必须在 fixture teardown 中尝试清理已创建的数据。
-- 测试账号、数据库密码和 API Token 只从本地环境变量读取，不写入 YAML、
-  日志、Allure 附件或 Git 仓库。
+- 测试账号、数据库密码和 API Token 只从本地 `.env` 或 Jenkins Secret file
+  读取，不写入日志、Allure 附件或 Git 仓库。
 
 ## 6. 第一版接口测试清单
 

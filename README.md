@@ -368,11 +368,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
   .\scripts\snipeit_ci_start.ps1 -EnvFile .\infra\snipeit\.env
 ```
 
-## 历史框架说明
+## 仓库范围
 
-本仓库由通用接口自动化框架演进而来，因此仍保留 Flask Mock、YAML、Redis、MongoDB、ClickHouse、邮件和钉钉通知等历史模块。当前企业资产管理项目的有效入口是 `testcase/snipeit`，上述历史模块不计入当前 Snipe-IT 测试覆盖。
-
-后续会逐步完成全新CI环境自动初始化和历史目录清理，使仓库结构与当前业务保持一致。
+仓库已完成历史通用框架清理，仅保留当前 Snipe-IT 项目所需的 API、Web UI、MariaDB、Docker、Allure 和 Jenkins 代码。当前测试入口为 `testcase/snipeit`。
 
 ## License
 
