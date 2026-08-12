@@ -1,7 +1,7 @@
 import json
 
 import allure
-import pymysql
+import mysql.connector
 
 
 class SnipeItDatabase:
@@ -20,18 +20,17 @@ class SnipeItDatabase:
             name='MySQL 查询语句',
             attachment_type=allure.attachment_type.JSON,
         )
-        connection = pymysql.connect(
+        connection = mysql.connector.connect(
             host=self.settings.db_host,
             port=self.settings.db_port,
             user=self.settings.db_username,
             password=self.settings.db_password,
             database=self.settings.db_name,
             charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor,
             autocommit=True,
         )
         try:
-            with connection.cursor() as cursor:
+            with connection.cursor(dictionary=True) as cursor:
                 cursor.execute(sql, params or ())
                 rows = cursor.fetchall()
         finally:

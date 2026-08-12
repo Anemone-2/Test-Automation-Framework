@@ -1,6 +1,6 @@
 # Snipe-IT 企业资产管理自动化测试项目
 
-基于 Python、Pytest、Requests 和 Selenium 构建的企业 IT 资产管理自动化测试项目，以开源资产管理系统 [Snipe-IT](https://snipeitapp.com/) 为真实测试对象，覆盖 REST API、Web UI、MariaDB 数据一致性以及资产领用、归还业务闭环。
+基于 Python、Pytest、Requests 和 Selenium 构建的企业 IT 资产管理自动化测试项目，以开源资产管理系统 [Snipe-IT](https://snipeitapp.com/) 为真实测试对象，覆盖 REST API、Web UI、MySQL 数据一致性以及资产领用、归还业务闭环。
 
 项目地址：[https://github.com/Anemone-2/Test-Automation-Framework](https://github.com/Anemone-2/Test-Automation-Framework)
 
@@ -14,7 +14,7 @@
 - 员工创建、查询、修改、删除及异常校验
 - 资产基础数据和硬件资产 CRUD 测试
 - 资产领用、归还、操作历史及异常场景测试
-- API 响应与 MariaDB 数据一致性校验
+- API 响应与 MySQL 数据一致性校验
 - Selenium Page Object Web 自动化
 - API 创建数据后通过 Web 列表和详情交叉验证
 - Allure 中文测试步骤、请求响应附件和失败截图
@@ -29,7 +29,7 @@
 | 测试框架 | Pytest |
 | 接口自动化 | Requests、Snipe-IT REST API |
 | Web 自动化 | Selenium、Page Object Model |
-| 数据库校验 | MariaDB/MySQL、PyMySQL |
+| 数据库校验 | MySQL、MySQL Connector/Python |
 | 环境部署 | Docker Compose |
 | 测试报告 | Allure、JUnit XML |
 | 配置管理 | `.env`、Python Dataclass |
@@ -42,10 +42,10 @@ flowchart LR
     T["Pytest 测试用例"] --> F["Fixture 与测试数据工厂"]
     T --> A["Requests API 客户端"]
     T --> P["Selenium Page Object"]
-    T --> D["MariaDB 查询组件"]
+    T --> D["MySQL 查询组件"]
     A --> S["Snipe-IT REST API"]
     P --> W["Snipe-IT Web UI"]
-    D --> M["MariaDB"]
+    D --> M["MySQL"]
     S --> M
     W --> M
     T --> R["Allure / JUnit 报告"]
@@ -56,7 +56,7 @@ flowchart LR
 - 配置层：从本地 `.env` 加载地址、账号、Token、浏览器和数据库配置。
 - 客户端层：统一处理 API 地址、请求头、超时、HTTP 429 重试和报告附件。
 - 页面层：封装登录、用户列表、用户详情、资产列表和资产详情页面。
-- 数据层：查询 MariaDB 中的资产状态、分配关系和审计日志。
+- 数据层：查询 MySQL 中的资产状态、分配关系和审计日志。
 - 用例层：组织鉴权、员工、资产、领用归还和 API/Web 组合场景。
 - 报告层：输出 Allure、JUnit XML，失败时附加截图和页面源码。
 
@@ -87,10 +87,10 @@ flowchart LR
 
 1. 通过 API 创建员工、资产及相关基础数据。
 2. 通过 API 将可领用资产分配给员工。
-3. 查询 MariaDB，校验 `assigned_to` 和 `assigned_type`。
+3. 查询 MySQL，校验 `assigned_to` 和 `assigned_type`。
 4. 登录 Web，在资产详情中校验领用员工和“归还”入口。
 5. 通过 API 归还资产。
-6. 校验 API 和 MariaDB 中的分配关系已经清空。
+6. 校验 API 和 MySQL 中的分配关系已经清空。
 7. 刷新 Web 详情，校验资产重新出现“领用”入口。
 8. 测试结束后自动删除员工、资产及依赖数据。
 
@@ -102,11 +102,11 @@ Test-Automation-Framework-main/
 │  └─ snipeit_client.py             # Snipe-IT REST API 客户端
 ├─ common/
 │  ├─ sensitive_data.py             # 敏感字段递归脱敏
-│  └─ snipeit_database.py           # MariaDB 查询封装
+│  └─ snipeit_database.py           # MySQL 查询封装
 ├─ conf/
 │  └─ snipeit_settings.py           # 环境和浏览器配置
 ├─ infra/snipeit/
-│  ├─ docker-compose.yml            # Snipe-IT + MariaDB
+│  ├─ docker-compose.yml            # Snipe-IT + MySQL
 │  ├─ .env.example                  # 本地配置模板
 │  └─ README.md                     # Docker 环境补充说明
 ├─ pages/
@@ -183,7 +183,7 @@ $keyGenerator.Dispose()
 
 > `infra/snipeit/.env` 已被 Git 忽略。不要提交管理员密码、数据库密码、API Token 或真实业务数据。
 
-### 3. 启动 Snipe-IT 和 MariaDB
+### 3. 启动 Snipe-IT 和 MySQL
 
 ```powershell
 docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose.yml up -d
@@ -195,7 +195,7 @@ docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose
 | 服务 | 地址 |
 | --- | --- |
 | Snipe-IT | `http://localhost:8090` |
-| MariaDB | `127.0.0.1:13307` |
+| MySQL | `127.0.0.1:13307` |
 
 首次启动后，访问 `http://localhost:8090` 完成 Snipe-IT 初始化向导，并创建自动化管理员账号。
 
@@ -298,7 +298,7 @@ SNIPEIT_UI_TIMEOUT=10
 docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose.yml down
 ```
 
-日常停止环境不要添加 `-v`。`down -v` 会删除 MariaDB 和 Snipe-IT 持久化卷中的数据。
+日常停止环境不要添加 `-v`。`down -v` 会删除 MySQL 和 Snipe-IT 持久化卷中的数据。
 
 ## 持续集成状态
 
@@ -306,7 +306,7 @@ docker compose --env-file .\infra\snipeit\.env -f .\infra\snipeit\docker-compose
 
 1. 拉取代码并创建或复用 Jenkins Python 虚拟环境。
 2. 从 Jenkins Secret file Credential 注入 Snipe-IT `.env`。
-3. 启动 Snipe-IT 和 MariaDB，并等待数据库健康及 Web 服务可访问。
+3. 启动 Snipe-IT 和 MySQL，并等待数据库健康及 Web 服务可访问。
 4. 按构建参数执行全量、冒烟、API 或 Web 测试。
 5. 发布 JUnit XML、Allure 报告并归档构建产物。
 6. 无论测试成功或失败都执行环境收尾。
@@ -370,7 +370,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
 
 ## 仓库范围
 
-仓库已完成历史通用框架清理，仅保留当前 Snipe-IT 项目所需的 API、Web UI、MariaDB、Docker、Allure 和 Jenkins 代码。当前测试入口为 `testcase/snipeit`。
+仓库已完成历史通用框架清理，仅保留当前 Snipe-IT 项目所需的 API、Web UI、MySQL、Docker、Allure 和 Jenkins 代码。当前测试入口为 `testcase/snipeit`。
 
 ## License
 

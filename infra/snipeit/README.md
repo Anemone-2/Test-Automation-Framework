@@ -8,7 +8,7 @@ from the legacy mock and datastore stack.
 | Service | Host address |
 | --- | --- |
 | Snipe-IT | `http://localhost:8090` |
-| MariaDB | `127.0.0.1:13307` |
+| MySQL | `127.0.0.1:13307` |
 
 ## First-time configuration
 

@@ -29,6 +29,6 @@
     </parameter>
     <parameter>
         <key>DataStores</key>
-        <value>MariaDB (MySQL compatible)</value>
+        <value>MySQL</value>
     </parameter>
 </environment>

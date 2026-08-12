@@ -68,7 +68,7 @@ foreach ($service in @('app', 'db')) {
 
 if ($allServicesWereRunning) {
     'REUSED' | Set-Content -LiteralPath $environmentMarker -Encoding ASCII
-    Write-Host 'Reusing the running Snipe-IT and MariaDB containers.'
+    Write-Host 'Reusing the running Snipe-IT and MySQL containers.'
 } else {
     & docker compose --env-file $resolvedEnvFile -f $composeFile up -d
     if ($LASTEXITCODE -ne 0) {
@@ -80,7 +80,7 @@ if ($allServicesWereRunning) {
 
 $dbContainerId = (& docker compose --env-file $resolvedEnvFile -f $composeFile ps -q db).Trim()
 if (-not $dbContainerId) {
-    throw 'MariaDB container was not created.'
+    throw 'MySQL container was not created.'
 }
 
 $databaseReady = $false
@@ -91,14 +91,14 @@ for ($attempt = 1; $attempt -le 60; $attempt++) {
         break
     }
     if ($health -eq 'unhealthy') {
-        throw 'MariaDB container became unhealthy.'
+        throw 'MySQL container became unhealthy.'
     }
     Start-Sleep -Seconds 2
 }
 if (-not $databaseReady) {
-    throw 'Timed out waiting for MariaDB to become healthy.'
+    throw 'Timed out waiting for MySQL to become healthy.'
 }
-Write-Host 'MariaDB is healthy.'
+Write-Host 'MySQL is healthy.'
 
 $appContainerId = (& docker compose --env-file $resolvedEnvFile -f $composeFile ps -q app).Trim()
 if (-not $appContainerId) {

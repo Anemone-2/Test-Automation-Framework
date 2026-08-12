@@ -1,12 +1,12 @@
 [project]
 name = "test-automation-framework"
 version = "0.1.0"
-description = "Snipe-IT API, Web UI and MariaDB automation testing project"
+description = "Snipe-IT API, Web UI and MySQL automation testing project"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "allure-pytest>=2.13.5",
-    "pymysql>=1.1.1",
+    "mysql-connector-python>=9.1.0,<10",
     "pytest>=8.3.2,<9",
     "requests>=2.32.3",
     "selenium>=4.27,<5",

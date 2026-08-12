@@ -6,7 +6,7 @@
 
 - 被测系统：Snipe-IT 企业 IT 资产管理系统
 - 测试层次：REST API、Web UI、API 与 Web 组合、API 与 MySQL 数据一致性
-- 自动化框架：Python、Pytest、Requests、Selenium、PyMySQL、Allure
+- 自动化框架：Python、Pytest、Requests、Selenium、MySQL Connector/Python、Allure
 - 最近一次全量结果：`38 passed in 35.98s`
 - Jenkins 构建：`#16 SUCCESS`
 - 流水线总耗时：80.41 秒
@@ -32,7 +32,7 @@
 ## 2. 公共前置条件
 
 1. Docker Desktop 正常运行。
-2. Snipe-IT 与 MariaDB 容器已经启动并通过健康检查。
+2. Snipe-IT 与 MySQL 容器已经启动并通过健康检查。
 3. Snipe-IT 地址为 `http://localhost:8090`。
 4. 系统已完成初始化，并存在管理员账号、API Token 及必要状态标签。
 5. `Ready to Deploy` 状态类型为 `deployable`，`Pending` 状态类型为 `pending`。
@@ -208,4 +208,3 @@ Jenkins 任务：Test-Automation-Framework
 Allure 报告：发布成功
 JUnit 报告：发布成功
 ```
-
